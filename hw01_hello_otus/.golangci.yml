@@ -1,0 +1,7 @@
+linters-settings:
+  gci-lint:
+    skip-generated: true
+    disable:
+      - standard
+      - default
+
