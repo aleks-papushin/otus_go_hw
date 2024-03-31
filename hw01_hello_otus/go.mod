@@ -1,4 +1,4 @@
-module github.com/aleks-papushin/otus_go_hw01
+module github.com/aleks-papushin/otus_go_hw01/hw01_hello_otus
 
 go 1.19
 
