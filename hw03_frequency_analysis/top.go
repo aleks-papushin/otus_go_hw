@@ -26,7 +26,7 @@ func parseTextIntoQuantityMap(s string) map[string]int {
 	quantityMap := make(map[string]int)
 
 	for _, w := range wordsArray {
-		quantityMap[w] += 1
+		quantityMap[w]++
 	}
 
 	return quantityMap
