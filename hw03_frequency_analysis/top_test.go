@@ -79,4 +79,12 @@ func TestTop10(t *testing.T) {
 			require.Equal(t, expected, Top10(text))
 		}
 	})
+
+	t.Run("output slice contains no more than topN elements", func(t *testing.T) {
+		require.LessOrEqual(t, len(Top10(text)), topN)
+	})
+
+	t.Run("there are no whitespace symbols in output slice", func(t *testing.T) {
+		require.NotContains(t, Top10(text), []string{"", "\n", "\r", "\t"})
+	})
 }
