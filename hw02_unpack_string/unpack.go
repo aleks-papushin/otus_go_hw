@@ -10,14 +10,22 @@ func Unpack(s string) (string, error) {
 	in := []rune(s)
 	out := []rune{}
 
+	if len(s) == 0 {
+		return s, nil
+	}
+
+	if isDigit(in[0]) {
+		return "", ErrInvalidString
+	}
+
 	for i := 0; i < len(in); i++ {
 		e := in[i]
 
 		if !isDigit(e) {
 			out = append(out, e)
 		} else {
-			// обработка ошибок (нулевой элемент - цифра или вторая цифра подряд)
-			if i == 0 || isDigit(in[i-1]) {
+			// вторая цифра подряд
+			if isDigit(in[i-1]) {
 				return "", ErrInvalidString
 			}
 			// если это 0, то перезапишем последнюю букву в возвращаемом массиве
