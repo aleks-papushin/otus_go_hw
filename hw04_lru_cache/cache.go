@@ -2,6 +2,13 @@ package hw04lrucache
 
 type Key string
 
+// будем везде записывать в значение и сам ключ, чтобы иметь возможность удалять из мапы за O(1)
+// в противном случае, удаляя элемент из очереди, пришлось бы по значению искать его в мапе полным обходом мапы
+type lruValue struct {
+	key   Key
+	value interface{}
+}
+
 type Cache interface {
 	Set(key Key, value interface{}) bool
 	Get(key Key) (interface{}, bool)
@@ -23,12 +30,16 @@ func NewCache(capacity int) Cache {
 }
 
 func (c *lruCache) Set(k Key, v interface{}) bool {
+	value := lruValue{
+		key:   k,
+		value: v,
+	}
 	if item, ok := c.items[k]; ok { // если элемент в словаре - обновить и переместить в начало очереди
-		item.Value = v
+		item.Value = value
 		c.queue.MoveToFront(item)
 		return ok
 	} else { // если нет, то добавить и поместить в начало,
-		newItem := c.queue.PushFront(v)
+		newItem := c.queue.PushFront(value)
 		c.items[k] = newItem
 
 		// при этом, если размер очереди становится больше емкости кэша,
@@ -36,11 +47,7 @@ func (c *lruCache) Set(k Key, v interface{}) bool {
 		if c.queue.Len() > c.capacity {
 			lastItem := c.queue.Back()
 			c.queue.Remove(lastItem)
-			for k, v := range c.items {
-				if v == lastItem {
-					delete(c.items, k)
-				}
-			}
+			delete(c.items, lastItem.Value.(lruValue).key)
 		}
 		return false
 	}
@@ -49,7 +56,7 @@ func (c *lruCache) Set(k Key, v interface{}) bool {
 func (c *lruCache) Get(k Key) (interface{}, bool) {
 	if item, ok := c.items[k]; ok {
 		c.queue.MoveToFront(item)
-		return item.Value, ok
+		return item.Value.(lruValue).value, ok
 	} else {
 		return nil, false
 	}
