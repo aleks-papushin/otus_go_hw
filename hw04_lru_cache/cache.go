@@ -1,5 +1,7 @@
 package hw04lrucache
 
+import "sync"
+
 type Key string
 
 // Будем везде записывать в значение и сам ключ, чтобы иметь возможность удалять из мапы за O(1)
@@ -19,6 +21,7 @@ type lruCache struct {
 	capacity int
 	queue    List
 	items    map[Key]*ListItem
+	mu       sync.Mutex
 }
 
 func NewCache(capacity int) Cache {
@@ -30,6 +33,9 @@ func NewCache(capacity int) Cache {
 }
 
 func (c *lruCache) Set(k Key, v interface{}) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	value := lruValue{
 		key:   k,
 		value: v,
@@ -56,6 +62,9 @@ func (c *lruCache) Set(k Key, v interface{}) bool {
 }
 
 func (c *lruCache) Get(k Key) (interface{}, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if item, ok := c.items[k]; ok {
 		c.queue.MoveToFront(item)
 		return item.Value.(lruValue).value, ok
@@ -64,6 +73,10 @@ func (c *lruCache) Get(k Key) (interface{}, bool) {
 }
 
 func (c *lruCache) Clear() {
+	c.mu.Lock()
+
 	c.queue = NewList()
 	c.items = make(map[Key]*ListItem)
+
+	c.mu.Unlock()
 }
