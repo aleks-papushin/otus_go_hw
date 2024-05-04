@@ -41,23 +41,24 @@ func (c *lruCache) Set(k Key, v interface{}) bool {
 		value: v,
 	}
 
-	if item, ok := c.items[k]; ok { // если элемент в словаре - обновить и переместить в начало очереди
+	if item, ok := c.items[k]; ok { // если элемент в мапе - обновить и переместить в начало очереди
 		item.Value = value
 		c.queue.MoveToFront(item)
 		return ok
 	}
 
-	// если нет, то добавить и поместить в начало,
-	newItem := c.queue.PushFront(value)
-	c.items[k] = newItem
-
-	// при этом, если размер очереди становится больше емкости кэша,
+	// если размер очереди после добавления нового элемента превысит емкость кэша,
 	// то удалить последний элемент из очереди и его значение из словаря
-	if c.queue.Len() > c.capacity {
+	if c.queue.Len() >= c.capacity {
 		lastItem := c.queue.Back()
 		c.queue.Remove(lastItem)
 		delete(c.items, lastItem.Value.(lruValue).key)
 	}
+
+	// если элемента не было в мапе, то добавить в начало очереди и в мапу
+	newItem := c.queue.PushFront(value)
+	c.items[k] = newItem
+
 	return false
 }
 
