@@ -68,9 +68,12 @@ func TestList(t *testing.T) {
 		require.Equal(t, []interface{}{struct{}{}, int32(114), 10, 2.0, "string"}, elems)
 	})
 
-	t.Run("removing single element does not panic", func(t *testing.T) {
+	t.Run("removing the only element", func(t *testing.T) {
 		l := NewList()
 		l.PushFront(1)
-		require.NotPanics(t, func() { l.Remove(l.Front()) })
+
+		require.NotPanics(t, func() { l.Remove(l.Front()) }) // list became empty
+		require.Nil(t, l.Front())
+		require.Nil(t, l.Back())
 	})
 }
