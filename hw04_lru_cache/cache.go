@@ -77,7 +77,7 @@ func (c *lruCache) Clear() {
 	c.mu.Lock()
 
 	c.queue = NewList()
-	c.items = make(map[Key]*ListItem)
+	c.items = make(map[Key]*ListItem, c.capacity)
 
 	c.mu.Unlock()
 }
