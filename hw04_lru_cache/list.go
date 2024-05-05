@@ -12,15 +12,99 @@ type List interface {
 
 type ListItem struct {
 	Value interface{}
-	Next  *ListItem
 	Prev  *ListItem
+	Next  *ListItem
 }
 
 type list struct {
-	List // Remove me after realization.
-	// Place your code here.
+	len   int
+	front *ListItem
+	back  *ListItem
 }
 
 func NewList() List {
 	return new(list)
+}
+
+func (l *list) Len() int {
+	return l.len
+}
+
+func (l *list) Front() *ListItem {
+	return l.front
+}
+
+func (l *list) Back() *ListItem {
+	return l.back
+}
+
+func (l *list) PushFront(v interface{}) *ListItem {
+	newListItem := ListItem{
+		Value: v,
+		Prev:  nil,
+		Next:  nil,
+	}
+
+	if l.len == 0 {
+		l.front = &newListItem
+		l.back = &newListItem
+	} else {
+		newListItem.Next = l.front
+		l.front.Prev = &newListItem
+		l.front = &newListItem
+	}
+
+	l.len++
+
+	return &newListItem
+}
+
+func (l *list) PushBack(v interface{}) *ListItem {
+	newListItem := ListItem{
+		Value: v,
+		Prev:  nil,
+		Next:  nil,
+	}
+
+	if l.len == 0 {
+		l.front = &newListItem
+		l.back = &newListItem
+	} else {
+		newListItem.Prev = l.back
+		l.back.Next = &newListItem
+		l.back = &newListItem
+	}
+
+	l.len++
+
+	return &newListItem
+}
+
+func (l *list) Remove(i *ListItem) {
+	switch {
+	case l.len == 1: // removing the only element
+		l.front, l.back = nil, nil
+	case i.Prev == nil: // removing the first element
+		i.Next.Prev = nil
+		l.front = i.Next
+	case i.Next == nil: // removing the last element
+		i.Prev.Next = nil
+		l.back = i.Prev
+	default:
+		i.Prev.Next = i.Next
+		i.Next.Prev = i.Prev
+	}
+	l.len--
+}
+
+func (l *list) MoveToFront(i *ListItem) {
+	if i.Prev == nil { // значит i уже является первым
+		return
+	}
+	l.Remove(i)
+	i.Prev = nil
+	i.Next = l.front
+	l.front.Prev = i
+	l.front = i
+	l.len++ // потому что после Remove() длина уменьшилась
 }
