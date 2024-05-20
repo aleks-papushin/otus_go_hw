@@ -68,6 +68,26 @@ func TestRun(t *testing.T) {
 		require.LessOrEqual(t, int64(elapsedTime), int64(sumTime/2), "tasks were run sequentially?")
 	})
 
+	t.Run("test when tasks number is less than n", func(t *testing.T) {
+		n := 50
+		m := 1
+		tasksNumber := int32(n / 2)
+		completionCounter := int32(0)
+
+		task := func() error {
+			atomic.AddInt32(&completionCounter, 1)
+			return nil
+		}
+		tasks := make([]Task, 0, tasksNumber)
+		for i := 0; i < cap(tasks); i++ {
+			tasks = append(tasks, task)
+		}
+		err := Run(tasks, n, m)
+
+		require.NoError(t, err)
+		require.Equal(t, tasksNumber, completionCounter)
+	})
+
 	t.Run("if m=0 then error limit exceeded", func(t *testing.T) {
 		n := 10
 		m := 0
