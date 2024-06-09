@@ -1,7 +1,6 @@
 package hw06pipelineexecution
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -31,22 +30,10 @@ func TestPipeline(t *testing.T) {
 	}
 
 	stages := []Stage{
-		g("Dummy", func(v interface{}) interface{} {
-			fmt.Printf("In stage Dummy. Val: %d\n", v)
-			return v
-		}),
-		g("Multiplier (* 2)", func(v interface{}) interface{} {
-			fmt.Printf("In stage Multiplier. Val: %d\n", v)
-			return v.(int) * 2
-		}),
-		g("Adder (+ 100)", func(v interface{}) interface{} {
-			fmt.Printf("In stage Adder. Val: %d\n", v)
-			return v.(int) + 100
-		}),
-		g("Stringifier", func(v interface{}) interface{} {
-			fmt.Printf("In stage Stringifier. Val: %d\n", v)
-			return strconv.Itoa(v.(int))
-		}),
+		g("Dummy", func(v interface{}) interface{} { return v }),
+		g("Multiplier (* 2)", func(v interface{}) interface{} { return v.(int) * 2 }),
+		g("Adder (+ 100)", func(v interface{}) interface{} { return v.(int) + 100 }),
+		g("Stringifier", func(v interface{}) interface{} { return strconv.Itoa(v.(int)) }),
 	}
 
 	t.Run("simple case", func(t *testing.T) {
