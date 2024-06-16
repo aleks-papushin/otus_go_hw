@@ -3,13 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/cheggaaa/pb/v3"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/cheggaaa/pb/v3"
 )
 
 var (
@@ -34,7 +35,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	}
 
 	dir := filepath.Dir(toPath)
-	if err = os.MkdirAll(dir, 0755); err != nil {
+	if err = os.MkdirAll(dir, os.ModePerm); err != nil {
 		return err
 	}
 
@@ -55,7 +56,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 
 	for {
 		read, err = fromFile.ReadAt(buffer, readFrom)
-		if err != nil && err != io.EOF {
+		if err != nil && !errors.Is(err, io.EOF) {
 			return err
 		}
 		readTotal += int64(read)
