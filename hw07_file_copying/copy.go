@@ -85,7 +85,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 func closeFile(fromFile *os.File) {
 	func(fromFile *os.File) {
 		if err := fromFile.Close(); err != nil {
-			fmt.Println(fmt.Errorf("error %w while closing file '%s'", err, fromFile))
+			fmt.Println(fmt.Errorf("error %w while closing file '%s'", err, fromFile.Name()))
 		}
 	}(fromFile)
 }
