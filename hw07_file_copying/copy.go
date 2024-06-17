@@ -3,14 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/cheggaaa/pb/v3"
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
-	"time"
-
-	"github.com/cheggaaa/pb/v3"
 )
 
 var (
@@ -20,14 +17,10 @@ var (
 )
 
 func Copy(fromPath, toPath string, offset, limit int64) error {
-	if ok := strings.HasSuffix(fromPath, ".txt"); !ok {
-		return ErrUnsupportedFile
-	}
-
 	fromFile, err := os.Open(fromPath)
 	defer closeFile(fromFile)
 	if err != nil {
-		return err
+		return ErrUnsupportedFile
 	}
 	fi, _ := fromFile.Stat()
 	if offset > fi.Size() {
@@ -104,7 +97,6 @@ func runProgressBar(ch <-chan int64, o, l, fs int64) {
 
 	for readTotal := range ch {
 		bar.SetCurrent(readTotal)
-		time.Sleep(time.Millisecond * 400) // throttle in purpose to see progress bar animation in terminal
 	}
 	defer func() {
 		bar.SetCurrent(bytesToWrite)
