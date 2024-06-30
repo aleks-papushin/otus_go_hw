@@ -19,7 +19,7 @@ type EnvValue struct {
 func ReadDir(dir string) (Environment, error) {
 	dirEntries, _ := os.ReadDir(dir)
 	env := make(Environment)
-	var err error = nil
+	var err error
 
 	for _, e := range dirEntries {
 		if e.IsDir() {
@@ -28,14 +28,15 @@ func ReadDir(dir string) (Environment, error) {
 
 		func() {
 			f, innerErr := os.Open(dir + "/" + e.Name())
-
-			defer f.Close()
+			defer func() {
+				if err = f.Close(); err != nil {
+					return
+				}
+			}()
 
 			scanner := bufio.NewScanner(f)
 			scanner.Scan()
-
 			value := sanitize(scanner.Text())
-
 			env[e.Name()] = EnvValue{
 				Value:      value,
 				NeedRemove: false,
@@ -55,7 +56,7 @@ func ReadDir(dir string) (Environment, error) {
 }
 
 func sanitize(s string) string {
-	s = strings.Replace(s, "\x00", "\n", -1)
+	s = strings.ReplaceAll(s, "\x00", "\n")
 	s = strings.TrimRight(s, " \t")
 	return s
 }

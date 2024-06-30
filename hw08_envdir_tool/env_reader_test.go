@@ -3,13 +3,14 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestReadDir(t *testing.T) {
-	dir := os.TempDir()
+	dir, _ := os.MkdirTemp("", "testdir")
 	defer os.RemoveAll(dir)
 
 	testCases := []struct {
@@ -46,7 +47,7 @@ func TestReadDir(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			os.WriteFile(dir+"/"+tc.varName, []byte(tc.varValue), 0600)
+			os.WriteFile(filepath.Join(dir, tc.varName), []byte(tc.varValue), 0600) //nolint:gofumpt
 			env, _ := ReadDir(dir)
 			envValue, ok := env[tc.varName]
 
