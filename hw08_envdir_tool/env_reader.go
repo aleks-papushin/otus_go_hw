@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -24,6 +25,11 @@ func ReadDir(dir string) (Environment, error) {
 	for _, e := range dirEntries {
 		if e.IsDir() {
 			continue
+		}
+
+		if strings.Contains(e.Name(), "=") {
+			return nil, fmt.Errorf(
+				"unable to process file \"%s\", file name shouldn't contain '=' symbol", e.Name())
 		}
 
 		func() {
