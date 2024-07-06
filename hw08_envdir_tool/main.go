@@ -15,9 +15,10 @@ func main() {
 
 	env, err := ReadDir(os.Args[1])
 	if err != nil {
-		fmt.Println(fmt.Sprintf("ReadDir method failed with: %s", err.Error()))
+		fmt.Printf("ReadDir method failed with: %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	RunCmd(os.Args[2:], env)
+	exitCode := RunCmd(os.Args[2:], env)
+	os.Exit(exitCode)
 }

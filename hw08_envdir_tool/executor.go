@@ -21,9 +21,7 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 		command.Env = append(command.Env, fmt.Sprint(k+"="+v.Value))
 	}
 
-	err := fmt.Errorf("Any error")
-
-	if err = command.Run(); err != nil {
+	if err := command.Run(); err != nil {
 		fmt.Printf("Program failed with error %s\n", err.Error())
 		if errors.As(err, &exitErr) {
 			return exitErr.ExitCode()
