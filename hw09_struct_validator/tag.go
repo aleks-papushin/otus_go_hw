@@ -29,7 +29,7 @@ type IntTag struct {
 func NewIntTag(s string) (*IntTag, error) {
 	tokens := strings.Split(s, ":")
 	if len(tokens) != 2 {
-		err := fmt.Errorf("wrong validation tag format for tag %s\n", s)
+		err := fmt.Errorf("wrong validation tag format for tag %s", s)
 		return nil, err
 	}
 	checkTypeName := tokens[0]
@@ -109,7 +109,7 @@ type StringTag struct {
 func NewStringTag(s string) (*StringTag, error) {
 	tokens := strings.Split(s, ":")
 	if len(tokens) != 2 {
-		err := fmt.Errorf("wrong validation tag format for tag %s\n", s)
+		err := fmt.Errorf("wrong validation tag format for tag %s", s)
 		return nil, err
 	}
 	checkTypeName := tokens[0]
@@ -119,16 +119,20 @@ func NewStringTag(s string) (*StringTag, error) {
 	}
 	checkType := stringCheckType(checkTypeName)
 	values := make([]string, 0)
-	if checkType == strSet {
+
+	switch checkType {
+	case strSet:
 		values = strings.Split(tokens[1], ",")
-	} else if checkType == regExp {
+	case regExp:
 		re := tokens[1]
 		_, err := regexp.Compile(re)
 		if err != nil {
 			return nil, fmt.Errorf("invalid regexp provided: %s", re)
 		}
 		values = append(values, re)
-	} else {
+	case length:
+		values = append(values, tokens[1])
+	default:
 		values = append(values, tokens[1])
 	}
 	if !areValidForString(checkType, values) {

@@ -23,11 +23,11 @@ type (
 	User struct {
 		ID     string `json:"id" validate:"length:36"`
 		Name   string
-		Age    int             `validate:"min:18|max:50"`
-		Email  string          `validate:"regExp:^\\w+@\\w+\\.\\w+$"`
-		Role   UserRole        `validate:"in:admin,stuff"`
-		Phones []string        `validate:"length:11"`
-		meta   json.RawMessage //nolint:unused
+		Age    int      `validate:"min:18|max:50"`
+		Email  string   `validate:"regExp:^\\w+@\\w+\\.\\w+$"`
+		Role   UserRole `validate:"in:admin,stuff"`
+		Phones []string `validate:"length:11"`
+		meta   json.RawMessage
 	}
 
 	App struct {
@@ -61,7 +61,8 @@ func TestValidate(t *testing.T) {
 			"SubjectScores struct, no error",
 			SubjectScores{
 				Name:   "Fedor Ivanov",
-				Scores: []int{3, 5, 4, 4, 5}},
+				Scores: []int{3, 5, 4, 4, 5},
+			},
 			nil, false,
 		},
 		{
@@ -74,7 +75,8 @@ func TestValidate(t *testing.T) {
 				Role:   "admin",
 				Phones: getRandomPhones(),
 				meta:   nil,
-			}, nil, false,
+			},
+			nil, false,
 		},
 		{
 			"Token struct, no erorr",
@@ -82,7 +84,8 @@ func TestValidate(t *testing.T) {
 				Header:    []byte("abc"),
 				Payload:   []byte("def"),
 				Signature: []byte("xyz"),
-			}, nil, false,
+			},
+			nil, false,
 		},
 		{
 			"App struct, validation (string len) error",
@@ -132,17 +135,18 @@ func TestValidate(t *testing.T) {
 			tt := tt
 			t.Parallel()
 			result := Validate(tt.in)
-			var vErrors ValidationErrors
-			if tt.expectedErr == nil {
+			switch {
+			case tt.expectedErr == nil:
 				require.NoError(t, result)
-			} else if tt.isValidationErr {
+			case tt.isValidationErr:
 				require.Error(t, result)
+				var vErrors ValidationErrors
 				if errors.As(result, &vErrors) {
 					require.EqualError(t, result, tt.expectedErr.Error())
 				} else {
 					t.Errorf("error is not of type ValidationErrors")
 				}
-			} else {
+			default:
 				require.Error(t, result)
 				require.EqualError(t, result, tt.expectedErr.Error())
 			}

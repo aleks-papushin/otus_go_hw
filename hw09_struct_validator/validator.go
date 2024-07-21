@@ -30,7 +30,7 @@ func Validate(v interface{}) error {
 	if reflect.TypeOf(v).Kind() != reflect.Struct {
 		return fmt.Errorf("v is not a struct")
 	}
-	var vErrors = make(ValidationErrors, 0)
+	vErrors := make(ValidationErrors, 0)
 	structure := reflect.ValueOf(v)
 	strType := structure.Type()
 
@@ -53,7 +53,7 @@ func Validate(v interface{}) error {
 }
 
 func validate(t reflect.StructField, v reflect.Value, vErrors *ValidationErrors) error {
-	switch t.Type.Kind() {
+	switch t.Type.Kind() { //nolint:exhaustive
 	case reflect.Int:
 		if err := validateIntField(t, int(v.Int()), vErrors); err != nil {
 			return err
@@ -139,11 +139,11 @@ func parseIntTags(t reflect.StructTag) ([]IntTag, error) {
 	splitVTags := strings.Split(vTags, "|")
 	tags := make([]IntTag, 0)
 	for _, tag := range splitVTags {
-		if intTag, err := NewIntTag(tag); err != nil {
+		intTag, err := NewIntTag(tag)
+		if err != nil {
 			return nil, err
-		} else {
-			tags = append(tags, *intTag)
 		}
+		tags = append(tags, *intTag)
 	}
 	return tags, nil
 }
@@ -153,11 +153,11 @@ func parseStringTags(t reflect.StructTag) ([]StringTag, error) {
 	splitVTags := strings.Split(vTags, "|")
 	tags := make([]StringTag, 0)
 	for _, tag := range splitVTags {
-		if stringTag, err := NewStringTag(tag); err != nil {
+		stringTag, err := NewStringTag(tag)
+		if err != nil {
 			return nil, err
-		} else {
-			tags = append(tags, *stringTag)
 		}
+		tags = append(tags, *stringTag)
 	}
 	return tags, nil
 }
