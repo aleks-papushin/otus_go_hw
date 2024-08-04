@@ -1,11 +1,12 @@
 package hw10programoptimization
 
 import (
-	"encoding/json"
-	"fmt"
+	"bufio"
+	"bytes"
 	"io"
 	"regexp"
 	"strings"
+	"sync"
 )
 
 type User struct {
@@ -21,46 +22,75 @@ type User struct {
 type DomainStat map[string]int
 
 func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
-	u, err := getUsers(r)
-	if err != nil {
-		return nil, fmt.Errorf("get users error: %w", err)
-	}
-	return countDomains(u, domain)
-}
-
-type users [100_000]User
-
-func getUsers(r io.Reader) (result users, err error) {
-	content, err := io.ReadAll(r)
-	if err != nil {
-		return
-	}
-
-	lines := strings.Split(string(content), "\n")
-	for i, line := range lines {
-		var user User
-		if err = json.Unmarshal([]byte(line), &user); err != nil {
-			return
+	scanner := bufio.NewScanner(r)
+	scanner.Split(scanBetweenSubstrings(byte('@'), byte('"')))
+	scanWG := sync.WaitGroup{}
+	domainCh := make(chan string)
+	scanWG.Add(1)
+	go func() {
+		defer scanWG.Done()
+		for scanner.Scan() {
+			d := strings.ToLower(string(scanner.Bytes()))
+			domainCh <- d
 		}
-		result[i] = user
-	}
-	return
-}
+	}()
 
-func countDomains(u users, domain string) (DomainStat, error) {
+	matchedCh := make(chan string)
+	reWG := sync.WaitGroup{}
+	reWG.Add(1)
+	go func() {
+		defer reWG.Done()
+		for dString := range domainCh {
+			dString := dString
+			reWG.Add(1)
+			go func() {
+				defer reWG.Done()
+				matched, err := regexp.Match("\\."+domain, []byte(dString))
+				if !matched || err != nil {
+					return
+				}
+				matchedCh <- dString
+			}()
+		}
+	}()
+
 	result := make(DomainStat)
-
-	for _, user := range u {
-		matched, err := regexp.Match("\\."+domain, []byte(user.Email))
-		if err != nil {
-			return nil, err
-		}
-
-		if matched {
-			num := result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])]
+	resWG := sync.WaitGroup{}
+	resWG.Add(1)
+	go func() {
+		defer resWG.Done()
+		for d := range matchedCh {
+			num := result[d]
 			num++
-			result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])] = num
+			result[d] = num
 		}
-	}
+	}()
+	scanWG.Wait()
+	close(domainCh)
+	reWG.Wait()
+	close(matchedCh)
+	resWG.Wait()
 	return result, nil
+}
+
+func scanBetweenSubstrings(start, end byte) bufio.SplitFunc {
+	return func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+		startIndex := bytes.IndexByte(data, start)
+		if startIndex == -1 {
+			if atEOF {
+				return 0, nil, nil
+			}
+			return 0, nil, nil
+		}
+		startIndex++
+		endIndex := bytes.IndexByte(data[startIndex:], end)
+		if endIndex == -1 {
+			if atEOF {
+				return 0, nil, nil
+			}
+			return 0, nil, nil
+		}
+		endIndex += startIndex
+		return endIndex + 1, data[startIndex:endIndex], nil
+	}
 }
