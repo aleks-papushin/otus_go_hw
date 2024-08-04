@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"io"
 	"regexp"
-	"strings"
 	"sync"
 )
 
@@ -25,17 +24,23 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 	scanner := bufio.NewScanner(r)
 	scanner.Split(scanBetweenSubstrings(byte('@'), byte('"')))
 	scanWG := sync.WaitGroup{}
-	domainCh := make(chan string)
+	domainCh := make(chan []byte)
 	scanWG.Add(1)
 	go func() {
 		defer scanWG.Done()
 		for scanner.Scan() {
-			d := strings.ToLower(string(scanner.Bytes()))
-			domainCh <- d
+			dBytes := scanner.Bytes()
+			dBytesCopy := make([]byte, len(dBytes))
+			copy(dBytesCopy, dBytes)
+			scanWG.Add(1)
+			go func() {
+				defer scanWG.Done()
+				domainCh <- bytesToLower(dBytesCopy)
+			}()
 		}
 	}()
 
-	matchedCh := make(chan string)
+	matchedCh := make(chan []byte)
 	reWG := sync.WaitGroup{}
 	reWG.Add(1)
 	go func() {
@@ -45,7 +50,7 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 			reWG.Add(1)
 			go func() {
 				defer reWG.Done()
-				matched, err := regexp.Match("\\."+domain, []byte(dString))
+				matched, err := regexp.Match("\\."+domain, dString)
 				if !matched || err != nil {
 					return
 				}
@@ -60,9 +65,10 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 	go func() {
 		defer resWG.Done()
 		for d := range matchedCh {
-			num := result[d]
+			dString := string(d)
+			num := result[dString]
 			num++
-			result[d] = num
+			result[dString] = num
 		}
 	}()
 	scanWG.Wait()
@@ -93,4 +99,13 @@ func scanBetweenSubstrings(start, end byte) bufio.SplitFunc {
 		endIndex += startIndex
 		return endIndex + 1, data[startIndex:endIndex], nil
 	}
+}
+
+func bytesToLower(b []byte) []byte {
+	for i := 0; i < len(b); i++ {
+		if b[i] >= 'A' && b[i] <= 'Z' {
+			b[i] += 'a' - 'A'
+		}
+	}
+	return b
 }
