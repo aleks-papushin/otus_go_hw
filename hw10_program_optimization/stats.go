@@ -1,3 +1,5 @@
+//go:generate easyjson -all stats.go
+
 package hw10programoptimization
 
 import (
@@ -7,23 +9,14 @@ import (
 	"strings"
 	"sync"
 
-	jsoniter "github.com/json-iterator/go"
+	"github.com/mailru/easyjson"
 )
 
 const (
 	defaultChSize = 100
 )
 
-type User struct {
-	ID       int
-	Name     string
-	Username string
-	Email    string
-	Phone    string
-	Password string
-	Address  string
-}
-
+// easyjson:json
 type UserEmail struct {
 	Email string
 }
@@ -53,7 +46,7 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 	go func() {
 		for uBytes := range uBytesCh {
 			var userEmail UserEmail
-			err := jsoniter.Unmarshal(uBytes, &userEmail)
+			err := easyjson.Unmarshal(uBytes, &userEmail)
 			if err != nil {
 				fmt.Println(err)
 				return
