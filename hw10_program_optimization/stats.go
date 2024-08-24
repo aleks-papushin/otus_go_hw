@@ -7,13 +7,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"sync"
 
 	"github.com/mailru/easyjson"
-)
-
-const (
-	defaultChSize = 100
 )
 
 // easyjson:json
@@ -23,63 +18,37 @@ type UserEmail struct {
 
 type DomainStat map[string]int
 
-var targetDomain string
-
 func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
-	targetDomain = domain
 	scanner := bufio.NewScanner(r)
-	uBytesCh := make(chan []byte, defaultChSize)
+	ds := make(DomainStat)
+	var errors []error
 
-	// get users line by line
-	go func() {
-		for scanner.Scan() {
-			uBytes := scanner.Bytes()
-			uBytesCopy := make([]byte, len(uBytes))
-			copy(uBytesCopy, uBytes)
-			uBytesCh <- uBytesCopy
+	for scanner.Scan() {
+		uBytes := scanner.Bytes()
+		ubCopy := make([]byte, len(uBytes))
+		copy(ubCopy, uBytes)
+
+		var uEmail UserEmail
+		err := easyjson.Unmarshal(ubCopy, &uEmail)
+		if err != nil {
+			errors = append(errors, err)
+			continue
 		}
-		close(uBytesCh)
-	}()
+		email := strings.ToLower(uEmail.Email)
 
-	// get emails
-	domainsCh := make(chan string, defaultChSize)
-	go func() {
-		for uBytes := range uBytesCh {
-			var userEmail UserEmail
-			err := easyjson.Unmarshal(uBytes, &userEmail)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			domainsCh <- strings.ToLower(strings.Split(userEmail.Email, "@")[1])
-		}
-		close(domainsCh)
-	}()
-
-	// get matched mails
-	matchedDomainsCh := make(chan string, defaultChSize)
-	go func() {
-		for e := range domainsCh {
-			if strings.Split(e, ".")[1] == targetDomain {
-				matchedDomainsCh <- e
+		if strings.HasSuffix(email, "."+domain) {
+			if strings.Contains(email, "@") {
+				userDomain := strings.Split(email, "@")[1]
+				num := ds[userDomain]
+				num++
+				ds[userDomain] = num
 			}
 		}
-		close(matchedDomainsCh)
-	}()
+	}
 
-	// count stats
-	stats := make(DomainStat)
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for sd := range matchedDomainsCh {
-			num := stats[sd]
-			num++
-			stats[sd] = num
-		}
-	}()
+	if len(errors) > 0 {
+		return ds, fmt.Errorf("unmarshal errors: %v", errors)
+	}
 
-	wg.Wait()
-	return stats, nil
+	return ds, nil
 }
