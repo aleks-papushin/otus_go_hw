@@ -36,13 +36,12 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 		}
 		email := strings.ToLower(uEmail.Email)
 
-		if strings.HasSuffix(email, "."+domain) {
-			if strings.Contains(email, "@") {
-				userDomain := strings.Split(email, "@")[1]
-				num := ds[userDomain]
-				num++
-				ds[userDomain] = num
-			}
+		if strings.HasSuffix(email, "."+domain) &&
+			strings.Contains(email, "@") {
+			userDomain := strings.Split(email, "@")[1]
+			num := ds[userDomain]
+			num++
+			ds[userDomain] = num
 		}
 	}
 
