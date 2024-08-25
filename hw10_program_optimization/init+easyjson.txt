@@ -1,0 +1,16 @@
+goos: darwin
+goarch: amd64
+pkg: github.com/aleks-papushin/otus_go_hw/hw10_program_optimization
+cpu: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+BenchmarkGetDomainStat-16    	       9	 123158423 ns/op	136044792 B/op	 1700065 allocs/op
+BenchmarkGetDomainStat-16    	       9	 124842241 ns/op	136044755 B/op	 1700065 allocs/op
+BenchmarkGetDomainStat-16    	       8	 135746307 ns/op	136044758 B/op	 1700065 allocs/op
+BenchmarkGetDomainStat-16    	       8	 130018723 ns/op	136044806 B/op	 1700065 allocs/op
+BenchmarkGetDomainStat-16    	       8	 128160132 ns/op	136044730 B/op	 1700065 allocs/op
+BenchmarkGetDomainStat-16    	       9	 121056350 ns/op	136049140 B/op	 1700066 allocs/op
+BenchmarkGetDomainStat-16    	       8	 125979318 ns/op	136044750 B/op	 1700065 allocs/op
+BenchmarkGetDomainStat-16    	       8	 128177509 ns/op	136044730 B/op	 1700065 allocs/op
+BenchmarkGetDomainStat-16    	       8	 134132511 ns/op	136044740 B/op	 1700065 allocs/op
+BenchmarkGetDomainStat-16    	       8	 138896606 ns/op	136044750 B/op	 1700065 allocs/op
+PASS
+ok  	github.com/aleks-papushin/otus_go_hw/hw10_program_optimization	20.395s

@@ -1,66 +1,53 @@
+//go:generate easyjson -all stats.go
+
 package hw10programoptimization
 
 import (
-	"encoding/json"
+	"bufio"
 	"fmt"
 	"io"
-	"regexp"
 	"strings"
+
+	"github.com/mailru/easyjson"
 )
 
-type User struct {
-	ID       int
-	Name     string
-	Username string
-	Email    string
-	Phone    string
-	Password string
-	Address  string
+// easyjson:json
+type UserEmail struct {
+	Email string
 }
 
 type DomainStat map[string]int
 
 func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
-	u, err := getUsers(r)
-	if err != nil {
-		return nil, fmt.Errorf("get users error: %w", err)
-	}
-	return countDomains(u, domain)
-}
+	scanner := bufio.NewScanner(r)
+	ds := make(DomainStat)
+	var errors []error
 
-type users [100_000]User
+	for scanner.Scan() {
+		uBytes := scanner.Bytes()
+		ubCopy := make([]byte, len(uBytes))
+		copy(ubCopy, uBytes)
 
-func getUsers(r io.Reader) (result users, err error) {
-	content, err := io.ReadAll(r)
-	if err != nil {
-		return
-	}
-
-	lines := strings.Split(string(content), "\n")
-	for i, line := range lines {
-		var user User
-		if err = json.Unmarshal([]byte(line), &user); err != nil {
-			return
-		}
-		result[i] = user
-	}
-	return
-}
-
-func countDomains(u users, domain string) (DomainStat, error) {
-	result := make(DomainStat)
-
-	for _, user := range u {
-		matched, err := regexp.Match("\\."+domain, []byte(user.Email))
+		var uEmail UserEmail
+		err := easyjson.Unmarshal(ubCopy, &uEmail)
 		if err != nil {
-			return nil, err
+			errors = append(errors, err)
+			continue
 		}
+		email := strings.ToLower(uEmail.Email)
 
-		if matched {
-			num := result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])]
+		if strings.HasSuffix(email, "."+domain) &&
+			strings.Contains(email, "@") {
+			userDomain := strings.Split(email, "@")[1]
+			num := ds[userDomain]
 			num++
-			result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])] = num
+			ds[userDomain] = num
 		}
 	}
-	return result, nil
+
+	if len(errors) > 0 {
+		return ds, fmt.Errorf("unmarshal errors: %v", errors)
+	}
+
+	return ds, nil
 }
